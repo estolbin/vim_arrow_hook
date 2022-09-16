@@ -21,27 +21,30 @@ LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
             case WM_KEYDOWN:
             case WM_SYSKEYDOWN:
                 PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT) lParam;
-                switch(p->vkCode)
+                if (capital_active())
                 {
-                    case 'H':
-                        keybd_event( VK_LEFT, 0, keyup, 0 );
-                        replacekey = capital_active();
-                        break;
-                    case 'J':
-                        keybd_event(VK_DOWN, 0, keyup, 0);
-                        replacekey = capital_active();
-                        break;
-                    case 'K':
-                        keybd_event(VK_UP, 0, keyup, 0);
-                        replacekey = capital_active();
-                        break;
-                    case 'L':
-                        keybd_event(VK_RIGHT, 0, keyup, 0);
-                        replacekey = capital_active();
-                        break;
+                    switch(p->vkCode)
+                    {
+                        case 'H':
+                            keybd_event( VK_LEFT, 0, keyup, 0 );
+                            replacekey = capital_active();
+                            break;
+                        case 'J':
+                            keybd_event(VK_DOWN, 0, keyup, 0);
+                            replacekey = capital_active();
+                            break;
+                        case 'K':
+                            keybd_event(VK_UP, 0, keyup, 0);
+                            replacekey = capital_active();
+                            break;
+                        case 'L':
+                            keybd_event(VK_RIGHT, 0, keyup, 0);
+                            replacekey = capital_active();
+                            break;
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
                 }
                 break;
         }
