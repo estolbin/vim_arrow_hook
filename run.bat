@@ -1,1 +1,0 @@
-start /B KeyboardHook.exe

