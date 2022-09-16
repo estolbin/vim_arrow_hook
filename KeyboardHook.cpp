@@ -1,4 +1,10 @@
+#include <iostream>
 #include <windows.h>
+
+int capital_active()
+{
+    return (GetKeyState(VK_CAPITAL) & 1) == 1;
+}
 
 LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
 {
@@ -17,14 +23,23 @@ LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
                 PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT) lParam;
                 switch(p->vkCode)
                 {
-                    case 'Q':
-                        keybd_event('Z', 0, keyup, 0);
-                        replacekey = true;
+                    case 'H':
+                        keybd_event( VK_LEFT, 0, keyup, 0 );
+                        replacekey = capital_active();
                         break;
-                    case 'Z':
-                        keybd_event('Q', 0, keyup, 0);
-                        replacekey = true;
+                    case 'J':
+                        keybd_event(VK_DOWN, 0, keyup, 0);
+                        replacekey = capital_active();
                         break;
+                    case 'K':
+                        keybd_event(VK_UP, 0, keyup, 0);
+                        replacekey = capital_active();
+                        break;
+                    case 'L':
+                        keybd_event(VK_RIGHT, 0, keyup, 0);
+                        replacekey = capital_active();
+                        break;
+
                     default:
                         break;
                 }
