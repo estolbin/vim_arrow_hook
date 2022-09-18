@@ -1,4 +1,7 @@
-# Переключатель стрелок на hjkl
+# Tool for enable Vim-like keybindings for arrow
 
-При включенном CapsLock клавиши hjkl будут работать как стрелки (Vim)
+After CapsLock on - key "h", "j", "k", "l" - work as arrows.
+App work in backgound. For Quit - right button on System Tray app icon.
+
+
 
