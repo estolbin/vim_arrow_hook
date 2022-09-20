@@ -5,14 +5,19 @@
 
 
 const UINT WM_TRAY = WM_USER + 1;
-HINSTANCE g_hInstance = NULL;
 HICON g_hIcon = NULL;
 HMENU g_menu;
 HHOOK hook_keyboard;
+NOTIFYICONDATA stData;
 
 int capital_active()
 {
     return (GetKeyState(VK_CAPITAL) & 1) == 1;
+}
+
+bool isShift()
+{
+    return (GetKeyState(VK_SHIFT) & 0x8000) == 0x8000;
 }
 
 LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
@@ -34,6 +39,10 @@ LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
                 {
                     switch(p->vkCode)
                     {
+                        if (isShift())
+                        {
+                            keybd_event(VK_SHIFT, 0x2A, 0, 0);
+                        }
                         case 'H':
                             keybd_event( VK_LEFT, 0, keyup, 0 );
                             replacekey = capital_active();
@@ -50,8 +59,25 @@ LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
                             keybd_event(VK_RIGHT, 0, keyup, 0);
                             replacekey = capital_active();
                             break;
-
-                        default:
+                        case 'D':
+                            keybd_event(VK_NEXT, 0, keyup, 0);
+                            replacekey = capital_active();
+                            break;
+                        case 'U':
+                            keybd_event(VK_PRIOR, 0, keyup, 0);
+                            replacekey = capital_active();
+                            break;
+                        case 'X':
+                            keybd_event(VK_DELETE, 0, keyup, 0);
+                            replacekey = capital_active();
+                            break;
+                        case 'A':
+                            keybd_event(VK_HOME, 0, keyup, 0);
+                            replacekey = capital_active();
+                            break;
+                        case 'E':
+                            keybd_event(VK_END, 0, keyup, 0);
+                            replacekey = capital_active();
                             break;
                     }
                 }
@@ -74,34 +100,20 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
             {
                 g_menu = CreatePopupMenu();
                 AppendMenu(g_menu, MF_STRING, ID_QUIT, "Quit");
-                
+
                 hook_keyboard = SetWindowsHookEx( WH_KEYBOARD_LL, ll_keyboardproc, 0, 0);
-
-
-                NOTIFYICONDATA stData;
-                ZeroMemory(&stData, sizeof(stData));
-                stData.cbSize = sizeof(stData);
-                stData.hWnd = hWnd;
-                stData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-                stData.uCallbackMessage = WM_TRAY;
-                stData.hIcon = g_hIcon = (HICON)LoadImage(NULL, "vim.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
-                strcpy(stData.szTip, "Vim like keys... global");
-                if(!Shell_NotifyIcon(NIM_ADD, &stData))
-                    return -1;
-
-
             }
             return 0;
         case WM_DESTROY:
             {
-                NOTIFYICONDATA stData;
+//                NOTIFYICONDATA stData;
                 ZeroMemory(&stData, sizeof(stData));
                 stData.cbSize = sizeof(stData);
                 stData.hWnd = hWnd;
                 Shell_NotifyIcon(NIM_DELETE, &stData);
 
                 UnhookWindowsHookEx(hook_keyboard);
-                
+
             }
             return 0;
 
@@ -129,7 +141,7 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
                     }
             }
             break;
-       case WM_COMMAND:
+        case WM_COMMAND:
             switch(LOWORD(wParam))
             {
                 case ID_QUIT:
@@ -143,35 +155,44 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR args, int nCmdShow)
 {
-    WNDCLASS wc;
+    WNDCLASSEX wc;
     ZeroMemory(&wc, sizeof(wc));
+    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
     wc.lpszClassName = "Vim arrow global";
+    wc.hInstance = hInstance;
+    wc.lpfnWndProc = HiddenWndProc;
 
-    HWND hHiddenWnd = FindWindow(wc.lpszClassName, NULL);
-    if (hHiddenWnd)
-        PostMessage(hHiddenWnd, WM_TRAY, 0, WM_LBUTTONDBLCLK);
-    else
+    if (!RegisterClassEx(&wc))
     {
-        wc.hInstance = hInstance;
-        wc.lpfnWndProc = HiddenWndProc;
-
-        ATOM aClass = RegisterClass(&wc);
-        if (aClass)
-        {
-            g_hInstance = hInstance;
-            if (hHiddenWnd = CreateWindow((LPCSTR) aClass, "", 0, 0, 0, 0, 0, NULL, NULL, hInstance, NULL))
-            {
-                MSG msg;
-                while (GetMessage(&msg, NULL, 0, 0))
-                {
-                    TranslateMessage(&msg);
-                    DispatchMessage(&msg);
-                }
-
-                if (IsWindow(hHiddenWnd))
-                    DestroyWindow(hHiddenWnd);
-            }
-            UnregisterClass((LPCSTR) aClass, g_hInstance);
-        }
+        MessageBox(NULL, "Could not register class", "Error", MB_OK | MB_ICONERROR);
     }
+
+
+    HWND hwnd = CreateWindow("Vim arrow global","", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,0,CW_USEDEFAULT,0, NULL, NULL, hInstance, NULL);
+
+    //    ShowWindow(hwnd, SW_HIDE);
+
+//    NOTIFYICONDATA stData;
+    ZeroMemory(&stData, sizeof(stData));
+    stData.cbSize = sizeof(stData);
+    stData.hWnd = hwnd;
+    stData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+    stData.uCallbackMessage = WM_TRAY;
+    stData.hIcon = g_hIcon = (HICON)LoadImage(NULL, "vim.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+    strcpy(stData.szTip, "Vim like keys... global");
+    Shell_NotifyIcon(NIM_ADD, &stData);
+
+    ShowWindow(FindWindow("ConsoleWindowClass", NULL), false);
+
+    MSG msg;
+    while(GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    return msg.wParam;
+
 }
