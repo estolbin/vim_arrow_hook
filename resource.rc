@@ -1,0 +1,5 @@
+#include <windows.h>
+#include "resource.h"
+
+ID_ICON ICON "vim.ico"
+
