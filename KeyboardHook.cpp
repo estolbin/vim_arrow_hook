@@ -1,19 +1,38 @@
 #include <windows.h>
-#include "resource.h"
-
-
+#include "KeyboardHook.h"
 
 const UINT WM_TRAY = WM_USER + 1;
 HICON g_hIcon = NULL;
+HICON g_hIcon_ON = NULL;
 HMENU g_menu;
 HHOOK hook_keyboard;
 NOTIFYICONDATA stData;
+bool IconChangedToOn = false;
 
 int capital_active()
 {
     return (GetKeyState(VK_CAPITAL) & 1) == 1;
 }
 
+void ChangeIcon()
+{
+    bool mode_on = (bool)capital_active();
+    if (mode_on && !IconChangedToOn)
+    {
+        IconChangedToOn = true;
+        //MessageBox(NULL, "Caps on!","VIM",MB_OK);
+        stData.hIcon = g_hIcon_ON;
+        Shell_NotifyIcon(NIM_MODIFY, &stData);
+        DestroyIcon(stData.hIcon);
+    } else if (!mode_on && IconChangedToOn)
+    {
+        IconChangedToOn = false;
+        stData.hIcon = g_hIcon;
+        Shell_NotifyIcon(NIM_MODIFY, &stData);
+        DestroyIcon(stData.hIcon);
+    }
+
+}
 
 LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
 {
@@ -30,6 +49,11 @@ LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
             PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT) lParam;
+            if (p->vkCode == VK_CAPITAL)
+            {
+                ChangeIcon();
+            }
+
             if (capital_active())
             {
                 switch(p->vkCode)
@@ -70,6 +94,12 @@ LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
                     keybd_event(VK_END, 0, keyup, 0);
                     replacekey = capital_active();
                     break;
+                case VK_OEM_2:
+                    keybd_event(VK_CONTROL, 0, KEYEVENTF_EXTENDEDKEY, 0);
+                    keybd_event('F', 0, keyup, 0);
+                    keybd_event(VK_CONTROL, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
+                    keybd_event(VK_CAPITAL, 0, keyup, 0);
+                    break;
                 }
             }
             break;
@@ -97,7 +127,7 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
     return 0;
     case WM_DESTROY:
     {
-        NOTIFYICONDATA stData;
+        //NOTIFYICONDATA stData;
         ZeroMemory(&stData, sizeof(stData));
         stData.cbSize = sizeof(stData);
         stData.hWnd = hWnd;
@@ -163,8 +193,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR args, int
 
     HWND hwnd = CreateWindow("Vim arrow global","", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,0,CW_USEDEFAULT,0, NULL, NULL, hInstance, NULL);
 
+    g_hIcon_ON = LoadIcon(hInstance, MAKEINTRESOURCE(ID_ICON_ON));
 
-    NOTIFYICONDATA stData;
+    //NOTIFYICONDATA stData;
     ZeroMemory(&stData, sizeof(stData));
     stData.cbSize = sizeof(stData);
     stData.hWnd = hwnd;
@@ -173,6 +204,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR args, int
     stData.hIcon = g_hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(ID_ICON));
     strcpy(stData.szTip, "Vim like keys... global");
     Shell_NotifyIcon(NIM_ADD, &stData);
+    DestroyIcon(stData.hIcon);
 
     //ShowWindow(FindWindow("ConsoleWindowClass", NULL), false);
 

@@ -1,3 +1,0 @@
-#include "KeyboardHook.h"
-
-ID_ICON ICON "vim.ico"

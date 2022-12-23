@@ -1,5 +1,6 @@
 #include <windows.h>
-#include "resource.h"
+#include "KeyboardHook.h"
 
 ID_ICON ICON "vim.ico"
+ID_ICON_ON ICON "vim_on.ico"
 
