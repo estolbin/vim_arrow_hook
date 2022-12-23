@@ -20,18 +20,14 @@ void ChangeIcon()
     if (mode_on && !IconChangedToOn)
     {
         IconChangedToOn = true;
-        //MessageBox(NULL, "Caps on!","VIM",MB_OK);
         stData.hIcon = g_hIcon_ON;
-        Shell_NotifyIcon(NIM_MODIFY, &stData);
-        DestroyIcon(stData.hIcon);
     } else if (!mode_on && IconChangedToOn)
     {
         IconChangedToOn = false;
         stData.hIcon = g_hIcon;
-        Shell_NotifyIcon(NIM_MODIFY, &stData);
-        DestroyIcon(stData.hIcon);
     }
-
+    Shell_NotifyIcon(NIM_MODIFY, &stData);
+    DestroyIcon(stData.hIcon);
 }
 
 LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
@@ -99,6 +95,7 @@ LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
                     keybd_event('F', 0, keyup, 0);
                     keybd_event(VK_CONTROL, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
                     keybd_event(VK_CAPITAL, 0, keyup, 0);
+                    replacekey = true;
                     break;
                 }
             }
@@ -113,6 +110,31 @@ LRESULT CALLBACK ll_keyboardproc (int nCode, WPARAM wParam, LPARAM lParam)
     return 1;
 }
 
+INT_PTR CALLBACK AboutDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch(msg)
+    {
+    case WM_INITDIALOG:
+        return 1;
+    case WM_COMMAND:
+        switch(LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            EndDialog(hwnd, IDOK);
+            break;
+
+        }
+        break;
+    default:
+        return 0;
+
+
+    }
+    return 1;
+
+}
+
 LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch(msg)
@@ -120,8 +142,8 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
     case WM_CREATE:
     {
         g_menu = CreatePopupMenu();
+        AppendMenu(g_menu, MF_STRING, IDD_ABOUT, "About");
         AppendMenu(g_menu, MF_STRING, ID_QUIT, "Quit");
-
         hook_keyboard = SetWindowsHookEx( WH_KEYBOARD_LL, ll_keyboardproc, 0, 0);
     }
     return 0;
@@ -158,6 +180,13 @@ LRESULT CALLBACK HiddenWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
             if(clicked == ID_QUIT)
             {
                 PostQuitMessage(0);
+            }
+            else if (clicked == IDD_ABOUT)
+            {
+                int ret = DialogBox(GetModuleHandle(NULL),MAKEINTRESOURCE(IDD_ABOUT), hWnd, AboutDlgProc);
+                if (ret == IDOK)
+                {
+                }
             }
         }
         }
